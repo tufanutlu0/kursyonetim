@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tahsilat Makbuzu</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .receipt-toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(251,251,253,0.9);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--line);
+    padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .receipt-paper {
+    max-width: 640px;
+    margin: 32px auto;
+    background: white;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+    padding: 48px 56px;
+    font-family: "Times New Roman", Georgia, serif;
+  }
+
+  .r-header {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #000;
+    margin-bottom: 28px;
+  }
+  .r-org { font-size: 22px; font-weight: 700; letter-spacing: 2px; margin: 0; }
+  .r-tagline { font-size: 11px; color: #555; margin-top: 4px; letter-spacing: 1px; }
+  .r-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    margin: 24px 0;
+    text-transform: uppercase;
+  }
+
+  .r-meta-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 100px 1fr;
+    gap: 8px 16px;
+    font-size: 13px;
+    margin-bottom: 28px;
+    padding: 16px;
+    border: 1px solid #000;
+  }
+  .r-meta-grid .label { font-weight: 700; }
+
+  .r-body {
+    margin: 24px 0;
+    line-height: 1.9;
+    font-size: 14px;
+  }
+  .r-amount-box {
+    border: 2px solid #000;
+    padding: 14px;
+    margin: 20px 0;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .r-amount-text {
+    text-align: center;
+    font-style: italic;
+    font-size: 13px;
+    margin-top: 6px;
+    color: #444;
+  }
+
+  .r-sign {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+  }
+  .r-sign-box {
+    border-top: 1px solid #000;
+    padding-top: 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .r-footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px dashed #888;
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+  }
+
+  @media print {
+    @page { size: A5 portrait; margin: 10mm; }
+    .receipt-toolbar, .no-print { display: none !important; }
+    body { background: white; }
+    .receipt-paper {
+      margin: 0; padding: 0; box-shadow: none; border-radius: 0; max-width: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="receipt-toolbar no-print">
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="senetler.html" class="btn btn-ghost btn-sm" style="padding:0 8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <div class="t-head">Tahsilat Makbuzu</div>
+  </div>
+  <button class="btn btn-primary" onclick="window.print()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Yazdır
+  </button>
+</div>
+
+<div class="receipt-paper" id="receiptContent">
+  <div style="text-align:center;padding:40px" id="loading">Yükleniyor…</div>
+</div>
+
+<script type="module">
+  import { requireAuth } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL, fmtDateLong, fmtPhone, qs } from "../js/utils.js";
+  import { ODEME_SEKLI_LABELS } from "../js/finance.js";
+  import {
+    doc, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  await requireAuth(["admin", "mudur"]);
+
+  const senetId = qs("id");
+  if (!senetId) {
+    document.getElementById("receiptContent").innerHTML = '<div style="padding:40px;text-align:center;color:red">Senet ID eksik</div>';
+    throw new Error("no id");
+  }
+
+  // Senet yükle
+  const senetSnap = await getDoc(doc(db, "promissoryNotes", senetId));
+  if (!senetSnap.exists()) {
+    document.getElementById("receiptContent").innerHTML = '<div style="padding:40px;text-align:center">Senet bulunamadı</div>';
+    throw new Error("not found");
+  }
+  const senet = senetSnap.data();
+
+  // Ayarlar (kurum bilgisi)
+  let settings = { kurumAdi: "YILDIZ KURS", kurumAdresi: "Yenimahalle / ANKARA", kurumTelefon: "" };
+  try {
+    const sSnap = await getDoc(doc(db, "settings", "app"));
+    if (sSnap.exists()) settings = { ...settings, ...sSnap.data() };
+  } catch(e){}
+
+  // Öğrenci bilgisi
+  let student = null;
+  try {
+    const stSnap = await getDoc(doc(db, "students", senet.studentId));
+    if (stSnap.exists()) student = stSnap.data();
+  } catch(e){}
+
+  // Sayıyı yazıya çevir (basit)
+  function amountToWords(n) {
+    const ones = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"];
+    const tens = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"];
+    const hundreds = ["", "yüz", "ikiyüz", "üçyüz", "dörtyüz", "beşyüz", "altıyüz", "yediyüz", "sekizyüz", "dokuzyüz"];
+    function toWords(num) {
+      if (num === 0) return "sıfır";
+      let s = "";
+      const h = Math.floor(num / 100);
+      const t = Math.floor((num % 100) / 10);
+      const o = num % 10;
+      if (h > 0) s += hundreds[h];
+      if (t > 0) s += tens[t];
+      if (o > 0) s += ones[o];
+      return s;
+    }
+    const lira = Math.floor(n);
+    const kurus = Math.round((n - lira) * 100);
+    let result = "";
+    if (lira >= 1000000) {
+      result += toWords(Math.floor(lira / 1000000)) + "milyon";
+      const remainMil = lira % 1000000;
+      if (remainMil >= 1000) result += toWords(Math.floor(remainMil / 1000)) + "bin";
+      const remainBin = remainMil % 1000;
+      if (remainBin > 0) result += toWords(remainBin);
+    } else if (lira >= 1000) {
+      const bin = Math.floor(lira / 1000);
+      result += (bin === 1 ? "bin" : toWords(bin) + "bin");
+      const remain = lira % 1000;
+      if (remain > 0) result += toWords(remain);
+    } else {
+      result = toWords(lira);
+    }
+    result += " TL";
+    if (kurus > 0) result += " " + toWords(kurus) + " kuruş";
+    return result;
+  }
+
+  const today = senet.odemeTarihi ? senet.odemeTarihi.toDate() : new Date();
+
+  document.getElementById("receiptContent").innerHTML = `
+    <div class="r-header">
+      <h1 class="r-org">${escapeHtml(settings.kurumAdi)}</h1>
+      <div class="r-tagline">${escapeHtml(settings.kurumAdresi || "")}${settings.kurumTelefon ? " · Tel: " + fmtPhone(settings.kurumTelefon) : ""}</div>
+    </div>
+
+    <div class="r-title">Tahsilat Makbuzu</div>
+
+    <div class="r-meta-grid">
+      <div class="label">Makbuz No:</div>
+      <div>${escapeHtml(senet.tahsilatMakbuzNo || "—")}</div>
+      <div class="label">Tarih:</div>
+      <div>${fmtDateLong(today)}</div>
+
+      <div class="label">Öğrenci:</div>
+      <div>${escapeHtml(senet.studentAdi)}</div>
+      <div class="label">Taksit:</div>
+      <div>${senet.taksitNo} / ${senet.taksitSayisi}</div>
+
+      <div class="label">Veli:</div>
+      <div>${escapeHtml(senet.veliAdi)} (${senet.veliTipi === "anne" ? "Anne" : "Baba"})</div>
+      <div class="label">TC No:</div>
+      <div>${escapeHtml(senet.veliTcNo || "—")}</div>
+    </div>
+
+    <div class="r-body">
+      Sayın <strong>${escapeHtml(senet.veliAdi)}</strong>'dan, öğrenci <strong>${escapeHtml(senet.studentAdi)}</strong>
+      ${student?.okul ? `(${escapeHtml(student.okul)} · ${escapeHtml(student.sinif || "")})` : ""}
+      için ${escapeHtml(senet.aciklama || "kurs ücreti")} kapsamında aşağıda belirtilen ${senet.taksitNo}. taksit tutarı
+      <strong>${ODEME_SEKLI_LABELS[senet.odemeSekli] || "nakit"}</strong> olarak tarafımıza ödenmiştir.
+    </div>
+
+    <div class="r-amount-box">
+      ${TL(senet.taksitTutari)}
+    </div>
+    <div class="r-amount-text">
+      (Yazıyla: ${amountToWords(senet.taksitTutari)})
+    </div>
+
+    <div class="r-sign">
+      <div class="r-sign-box">
+        <div style="height:48px"></div>
+        Ödeyen<br>
+        <strong>${escapeHtml(senet.veliAdi)}</strong>
+      </div>
+      <div class="r-sign-box">
+        <div style="height:48px"></div>
+        Tahsil Eden<br>
+        <strong>${escapeHtml(settings.kurumAdi)}</strong>
+      </div>
+    </div>
+
+    <div class="r-footer">
+      İşbu makbuz ${fmtDateLong(today)} tarihinde düzenlenmiştir. · Makbuz No: ${escapeHtml(senet.tahsilatMakbuzNo || "—")}
+    </div>
+  `;
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+</script>
+
+</body>
+</html>

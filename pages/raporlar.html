@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raporlar · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    padding: 22px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .kpi-label { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi-sub { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-row:last-child { border-bottom: none; }
+  .bar-label { width: 120px; font-size: 13px; font-weight: 500; }
+  .bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--bg-subtle);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #4899f0);
+    border-radius: 5px;
+    transition: width var(--dur-slow) var(--ease-out);
+  }
+  .bar-fill.danger { background: linear-gradient(90deg, var(--danger), #ff7770); }
+  .bar-fill.warning { background: linear-gradient(90deg, var(--warning), #ffc24d); }
+  .bar-fill.success { background: linear-gradient(90deg, var(--success), #5ee283); }
+  .bar-value { width: 120px; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">Dashboard</a>
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item" href="ogrenciler.html">Öğrenciler</a>
+    <a class="nav-item" href="ogretmenler.html">Öğretmenler</a>
+    <a class="nav-item" href="siniflar.html">Sınıflar</a>
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item" href="senetler.html">Senetler</a>
+    <a class="nav-item" href="kasa.html">Kasa & Muhasebe</a>
+    <a class="nav-item active" href="raporlar.html">Raporlar</a>
+    <div style="flex:1"></div>
+    <a class="nav-item" href="#" data-action="logout">Çıkış Yap</a>
+  </aside>
+
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div>
+        <div class="t-tiny" style="color:var(--ink-4)">Finans</div>
+        <div class="t-head">Raporlar</div>
+      </div>
+      <div>
+        <select class="select" id="yearSelect" style="width:140px"></select>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- KPI -->
+      <div class="kpi-grid animate-in">
+        <div class="kpi-card">
+          <div class="kpi-label">Yıllık Tahsilat</div>
+          <div class="kpi-value" id="kpiCollected" style="color:#248a3d">—</div>
+          <div class="kpi-sub" id="kpiCollectedSub">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Yıllık Beklenen</div>
+          <div class="kpi-value" id="kpiExpected">—</div>
+          <div class="kpi-sub">Planlanan toplam ciro</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tahsilat Oranı</div>
+          <div class="kpi-value" id="kpiRate" style="color:var(--accent)">—</div>
+          <div class="kpi-sub">Ödenen / Toplam</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Gecikmiş Alacak</div>
+          <div class="kpi-value" id="kpiOverdue" style="color:var(--danger)">—</div>
+          <div class="kpi-sub" id="kpiOverdueSub">—</div>
+        </div>
+      </div>
+
+      <!-- Aylık Ciro Grafiği -->
+      <div class="card" style="padding:24px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div>
+            <div class="t-head">Aylık Ciro</div>
+            <div class="t-small">Tahsilat ve beklenen tutarlar</div>
+          </div>
+        </div>
+        <div id="monthlyChart"><div class="t-small" style="padding:24px;text-align:center">Yükleniyor…</div></div>
+      </div>
+
+      <!-- İki kolonlu: Öğrenciler + Kategori -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px">
+
+        <!-- En Borçlu Öğrenciler -->
+        <div class="card" style="padding:22px">
+          <div style="margin-bottom:14px">
+            <div class="t-head">En Yüksek Bekleyen Bakiye</div>
+            <div class="t-small">Ödenmemiş senet toplamı</div>
+          </div>
+          <div id="topDebtors"><div class="t-small" style="padding:24px;text-align:center">Yükleniyor…</div></div>
+        </div>
+
+        <!-- Kategori Bazlı Gider -->
+        <div class="card" style="padding:22px">
+          <div style="margin-bottom:14px">
+            <div class="t-head">Yıllık Gider Dağılımı</div>
+            <div class="t-small">Kategoriye göre</div>
+          </div>
+          <div id="expenseBreakdown"><div class="t-small" style="padding:24px;text-align:center">Yükleniyor…</div></div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL } from "../js/utils.js";
+  import { KATEGORI_LABELS } from "../js/finance.js";
+  import {
+    collection, query, where, orderBy, getDocs, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin"]); // sadece admin
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const yearSelect = document.getElementById("yearSelect");
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear + 1; y >= currentYear - 3; y--) {
+    const opt = document.createElement("option");
+    opt.value = y; opt.textContent = y;
+    if (y === currentYear) opt.selected = true;
+    yearSelect.appendChild(opt);
+  }
+
+  async function loadYearReport() {
+    const year = parseInt(yearSelect.value);
+    const start = new Date(year, 0, 1);
+    const end = new Date(year, 11, 31, 23, 59, 59);
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    try {
+      // Senetler
+      const senetSnap = await getDocs(query(
+        collection(db, "promissoryNotes"),
+        where("vadeTarihi", ">=", Timestamp.fromDate(start)),
+        where("vadeTarihi", "<=", Timestamp.fromDate(end))
+      ));
+
+      let collected = 0, expected = 0, overdue = 0, overdueCount = 0;
+      const monthly = Array(12).fill(null).map(() => ({ collected: 0, expected: 0 }));
+      const studentDebts = {};
+
+      senetSnap.forEach(d => {
+        const s = d.data();
+        if (s.durum === "iptal") return;
+        const vade = s.vadeTarihi.toDate();
+        const m = vade.getMonth();
+        const t = s.taksitTutari || 0;
+
+        expected += t;
+        monthly[m].expected += t;
+
+        if (s.durum === "odendi") {
+          collected += t;
+          const odTarihi = s.odemeTarihi?.toDate();
+          if (odTarihi && odTarihi.getFullYear() === year) {
+            monthly[odTarihi.getMonth()].collected += t;
+          }
+        } else {
+          if (vade < today) {
+            overdue += t;
+            overdueCount++;
+          }
+          // Bekleyen bakiye -> öğrenci
+          const key = s.studentId;
+          if (!studentDebts[key]) studentDebts[key] = { ad: s.studentAdi, tutar: 0, adet: 0 };
+          studentDebts[key].tutar += t;
+          studentDebts[key].adet++;
+        }
+      });
+
+      document.getElementById("kpiCollected").textContent = TL(collected);
+      document.getElementById("kpiCollectedSub").textContent = `${senetSnap.size} senet`;
+      document.getElementById("kpiExpected").textContent = TL(expected);
+      const rate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
+      document.getElementById("kpiRate").textContent = `%${rate}`;
+      document.getElementById("kpiOverdue").textContent = TL(overdue);
+      document.getElementById("kpiOverdueSub").textContent = `${overdueCount} gecikmiş taksit`;
+
+      // Aylık grafik
+      const monthNames = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+      const maxVal = Math.max(...monthly.map(m => m.expected), 1);
+      document.getElementById("monthlyChart").innerHTML = monthly.map((m, i) => `
+        <div class="bar-row">
+          <div class="bar-label">${monthNames[i]}</div>
+          <div class="bar-track" title="Beklenen: ${TL(m.expected)}">
+            <div class="bar-fill success" style="width:${(m.collected / maxVal * 100).toFixed(1)}%"></div>
+          </div>
+          <div class="bar-value" style="color:#248a3d">${TL(m.collected)}</div>
+        </div>
+      `).join("");
+
+      // En borçlular
+      const topDebtors = Object.entries(studentDebts)
+        .sort((a,b) => b[1].tutar - a[1].tutar)
+        .slice(0, 8);
+      const debtorsEl = document.getElementById("topDebtors");
+      if (topDebtors.length === 0) {
+        debtorsEl.innerHTML = `<div class="t-small" style="padding:20px;text-align:center">Bekleyen bakiye yok 👏</div>`;
+      } else {
+        const maxDebt = topDebtors[0][1].tutar;
+        debtorsEl.innerHTML = topDebtors.map(([id, x]) => `
+          <div class="bar-row">
+            <a href="senetler.html?student=${id}" class="bar-label truncate" style="color:inherit;text-decoration:none">${escapeHtml(x.ad)}</a>
+            <div class="bar-track"><div class="bar-fill warning" style="width:${(x.tutar / maxDebt * 100).toFixed(1)}%"></div></div>
+            <div class="bar-value">${TL(x.tutar)}</div>
+          </div>
+        `).join("");
+      }
+
+      // Gider dağılımı
+      const cashSnap = await getDocs(query(
+        collection(db, "cashFlow"),
+        where("tarih", ">=", Timestamp.fromDate(start)),
+        where("tarih", "<=", Timestamp.fromDate(end)),
+        where("tip", "==", "gider")
+      ));
+      const byCat = {};
+      cashSnap.forEach(d => {
+        const h = d.data();
+        byCat[h.kategori] = (byCat[h.kategori] || 0) + (h.tutar || 0);
+      });
+      const sortedCats = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+      const expEl = document.getElementById("expenseBreakdown");
+      if (sortedCats.length === 0) {
+        expEl.innerHTML = `<div class="t-small" style="padding:20px;text-align:center">Bu yıl gider kaydı yok</div>`;
+      } else {
+        const maxExp = sortedCats[0][1];
+        expEl.innerHTML = sortedCats.map(([k, v]) => `
+          <div class="bar-row">
+            <div class="bar-label">${escapeHtml(KATEGORI_LABELS[k] || k)}</div>
+            <div class="bar-track"><div class="bar-fill danger" style="width:${(v / maxExp * 100).toFixed(1)}%"></div></div>
+            <div class="bar-value" style="color:var(--danger)">${TL(v)}</div>
+          </div>
+        `).join("");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  yearSelect.addEventListener("change", loadYearReport);
+  await loadYearReport();
+</script>
+
+</body>
+</html>

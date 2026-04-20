@@ -383,6 +383,41 @@
         </div>
 
       </form>
+
+      <!-- Finans Özeti (sadece edit modu) -->
+      <div id="financeSection" style="display:none;margin-top:24px">
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="t-head">Finansal Durum</div>
+              <div class="t-small">Senet ve ödeme özeti</div>
+            </div>
+            <a id="newSenetBtn" class="btn btn-primary btn-sm">+ Yeni Senet Planı</a>
+          </div>
+          <div id="financeSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">
+            <div style="padding:14px;background:var(--bg-subtle);border-radius:var(--r-md)">
+              <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">Toplam</div>
+              <div style="font-size:18px;font-weight:600" id="finToplam">—</div>
+            </div>
+            <div style="padding:14px;background:var(--success-tint);border-radius:var(--r-md)">
+              <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">Ödenen</div>
+              <div style="font-size:18px;font-weight:600;color:#248a3d" id="finOdenen">—</div>
+            </div>
+            <div style="padding:14px;background:var(--warning-tint);border-radius:var(--r-md)">
+              <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">Bekleyen</div>
+              <div style="font-size:18px;font-weight:600;color:#b25b00" id="finBekleyen">—</div>
+            </div>
+            <div style="padding:14px;background:var(--danger-tint);border-radius:var(--r-md)">
+              <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">Gecikmiş</div>
+              <div style="font-size:18px;font-weight:600;color:var(--danger)" id="finGecikmis">—</div>
+            </div>
+          </div>
+          <a id="senetListLink" class="btn btn-secondary btn-sm">Tüm senetleri görüntüle →</a>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -648,6 +683,22 @@
   // ---- Başlat ----
   await loadClasses();
   await loadStudent();
+
+  // Finans özeti (sadece edit modunda)
+  if (isEdit) {
+    try {
+      const { getStudentFinance } = await import("../js/finance.js");
+      const { TL } = await import("../js/utils.js");
+      const fin = await getStudentFinance(studentId);
+      document.getElementById("financeSection").style.display = "block";
+      document.getElementById("finToplam").textContent = TL(fin.toplam);
+      document.getElementById("finOdenen").textContent = TL(fin.odenen);
+      document.getElementById("finBekleyen").textContent = TL(fin.bekleyen);
+      document.getElementById("finGecikmis").textContent = TL(fin.gecikmis);
+      document.getElementById("newSenetBtn").href = `senet-olustur.html?student=${studentId}`;
+      document.getElementById("senetListLink").href = `senetler.html?student=${studentId}`;
+    } catch (e) { console.warn(e); }
+  }
 </script>
 
 </body>

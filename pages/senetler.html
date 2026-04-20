@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senetler · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    padding: 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .summary-label { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-value { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+  .filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
+  }
+  .search-input { flex: 1; min-width: 200px; position: relative; }
+  .search-input input { padding-left: 40px; }
+  .search-input svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-4); }
+
+  .mini-action {
+    background: none; border: 1px solid var(--line-strong); border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; cursor: pointer;
+    transition: all var(--dur-fast) var(--ease); color: var(--ink-2);
+  }
+  .mini-action:hover { background: var(--bg-subtle); color: var(--ink-1); }
+  .mini-action.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .mini-action.primary:hover { background: var(--accent-hover); }
+
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">Dashboard</a>
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item" href="ogrenciler.html">Öğrenciler</a>
+    <a class="nav-item" href="ogretmenler.html">Öğretmenler</a>
+    <a class="nav-item" href="siniflar.html">Sınıflar</a>
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item active" href="senetler.html">Senetler</a>
+    <a class="nav-item" href="kasa.html" data-hide-role="mudur">Kasa & Muhasebe</a>
+    <a class="nav-item" href="raporlar.html" data-hide-role="mudur">Raporlar</a>
+    <div style="flex:1"></div>
+    <a class="nav-item" href="#" data-action="logout">Çıkış Yap</a>
+  </aside>
+
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div>
+        <div class="t-tiny" style="color:var(--ink-4)">Finans</div>
+        <div class="t-head">Senetler</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="senet-olustur.html" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+          Yeni Senet Planı
+        </a>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- Özet Kartları -->
+      <div class="summary-grid animate-in">
+        <div class="summary-card">
+          <div class="summary-label">Toplam Senet</div>
+          <div class="summary-value" id="totalCount">—</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Tahsil Edilen</div>
+          <div class="summary-value" id="collectedAmount" style="color:#248a3d">—</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Bekleyen</div>
+          <div class="summary-value" id="pendingAmount" style="color:var(--warning)">—</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Gecikmiş</div>
+          <div class="summary-value" id="overdueAmount" style="color:var(--danger)">—</div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-bar animate-in">
+        <div class="search-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          <input type="text" class="input" id="searchInput" placeholder="Öğrenci adı ile ara…">
+        </div>
+        <select class="select" id="statusFilter" style="max-width:180px">
+          <option value="all">Tüm Durumlar</option>
+          <option value="bekliyor">Bekleyenler</option>
+          <option value="gecikti">Gecikenler</option>
+          <option value="odendi">Ödenmiş</option>
+          <option value="iptal">İptal</option>
+        </select>
+        <select class="select" id="monthFilter" style="max-width:180px">
+          <option value="">Tüm Aylar</option>
+        </select>
+      </div>
+
+      <!-- Tablo -->
+      <div class="table-wrap animate-in">
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Öğrenci</th>
+                <th>Taksit</th>
+                <th>Vade</th>
+                <th style="text-align:right">Tutar</th>
+                <th>Durum</th>
+                <th>Veli</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="senetTable">
+              <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--ink-3)">Senetler yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL, fmtDate, senetStatus, toast, setLoading, confirmDialog, qs } from "../js/utils.js";
+  import { payPromissory, unpayPromissory, ODEME_SEKLI_LABELS } from "../js/finance.js";
+  import {
+    collection, doc, query, where, orderBy, getDocs, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin", "mudur"]);
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const tbody = document.getElementById("senetTable");
+  const searchInput = document.getElementById("searchInput");
+  const statusFilter = document.getElementById("statusFilter");
+  const monthFilter = document.getElementById("monthFilter");
+
+  let allSenets = [];
+  const filterStudentId = qs("student");
+
+  // URL'den öğrenci filtresi geldiyse bildir
+  if (filterStudentId) {
+    try {
+      const s = await getDoc(doc(db, "students", filterStudentId));
+      if (s.exists()) {
+        const banner = document.createElement("div");
+        banner.className = "card";
+        banner.style.cssText = "padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;background:var(--accent-tint);border:none";
+        banner.innerHTML = `
+          <div><strong>${s.data().adSoyad}</strong> öğrencisinin senetleri gösteriliyor</div>
+          <a href="senetler.html" class="btn btn-sm btn-ghost">Filtreyi Kaldır</a>
+        `;
+        document.querySelector(".page").insertBefore(banner, document.querySelector(".summary-grid"));
+      }
+    } catch (e) {}
+  }
+
+  async function loadSenets() {
+    try {
+      let q = query(collection(db, "promissoryNotes"), orderBy("vadeTarihi", "desc"));
+      if (filterStudentId) {
+        q = query(
+          collection(db, "promissoryNotes"),
+          where("studentId", "==", filterStudentId),
+          orderBy("vadeTarihi", "asc")
+        );
+      }
+      const snap = await getDocs(q);
+      allSenets = [];
+      snap.forEach(d => allSenets.push({ id: d.id, ...d.data() }));
+      buildMonthOptions();
+      updateSummary();
+      render();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--danger)">Senetler yüklenemedi: ${e.message}</td></tr>`;
+    }
+  }
+
+  function buildMonthOptions() {
+    const months = new Set();
+    allSenets.forEach(s => {
+      const d = s.vadeTarihi.toDate();
+      months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+    });
+    const sorted = [...months].sort().reverse();
+    sorted.forEach(m => {
+      const [y, mo] = m.split("-");
+      const name = new Date(+y, +mo - 1).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = name;
+      monthFilter.appendChild(opt);
+    });
+  }
+
+  function updateSummary() {
+    const list = filteredList();
+    let collected = 0, pending = 0, overdue = 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    list.forEach(s => {
+      if (s.durum === "odendi") collected += s.taksitTutari || 0;
+      else if (s.durum !== "iptal") {
+        pending += s.taksitTutari || 0;
+        if (s.vadeTarihi.toDate() < today) overdue += s.taksitTutari || 0;
+      }
+    });
+    document.getElementById("totalCount").textContent = list.length;
+    document.getElementById("collectedAmount").textContent = TL(collected);
+    document.getElementById("pendingAmount").textContent = TL(pending);
+    document.getElementById("overdueAmount").textContent = TL(overdue);
+  }
+
+  function filteredList() {
+    const q = searchInput.value.trim().toLocaleLowerCase("tr");
+    const status = statusFilter.value;
+    const month = monthFilter.value;
+
+    return allSenets.filter(s => {
+      if (q && !(s.studentAdi || "").toLocaleLowerCase("tr").includes(q)) return false;
+
+      if (status !== "all") {
+        if (status === "gecikti") {
+          if (s.durum !== "bekliyor") return false;
+          const vade = s.vadeTarihi.toDate();
+          const today = new Date(); today.setHours(0,0,0,0);
+          if (vade >= today) return false;
+        } else if (s.durum !== status) return false;
+      }
+
+      if (month) {
+        const d = s.vadeTarihi.toDate();
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+        if (key !== month) return false;
+      }
+      return true;
+    });
+  }
+
+  function render() {
+    updateSummary();
+    const list = filteredList();
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--ink-3)">Bu filtreyle eşleşen senet yok</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = "";
+    list.forEach(s => {
+      const status = senetStatus(s);
+      const tr = document.createElement("tr");
+      tr.className = status.cls;
+
+      let actionHtml = "";
+      if (s.durum === "bekliyor") {
+        actionHtml = `<button class="mini-action primary" data-act="pay" data-id="${s.id}">Ödendi</button>`;
+      } else if (s.durum === "odendi") {
+        actionHtml = `
+          <button class="mini-action" data-act="receipt" data-id="${s.id}">Makbuz</button>
+          <button class="mini-action" data-act="unpay" data-id="${s.id}">Geri Al</button>
+        `;
+      }
+
+      tr.innerHTML = `
+        <td>
+          <a href="ogrenci-detay.html?id=${s.studentId}" style="color:inherit;font-weight:500;text-decoration:none">${escapeHtml(s.studentAdi)}</a>
+        </td>
+        <td class="t-small">${s.taksitNo} / ${s.taksitSayisi}</td>
+        <td>${fmtDate(s.vadeTarihi)}</td>
+        <td style="text-align:right;font-weight:600;font-variant-numeric:tabular-nums">${TL(s.taksitTutari)}</td>
+        <td><span class="badge ${status.badge}">${status.label}</span></td>
+        <td class="t-small">${escapeHtml(s.veliAdi || "—")} <span style="color:var(--ink-4)">(${s.veliTipi})</span></td>
+        <td style="white-space:nowrap">${actionHtml}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // İşlemler
+  tbody.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".mini-action");
+    if (!btn) return;
+    const { act, id } = btn.dataset;
+    const senet = allSenets.find(s => s.id === id);
+    if (!senet) return;
+
+    if (act === "pay") {
+      await handlePay(senet, btn);
+    } else if (act === "unpay") {
+      const ok = await confirmDialog(
+        "Ödemeyi geri al?",
+        "Bu işlem senedi tekrar 'Bekliyor' durumuna alır ve kasa hareketini siler. Makbuz numarası da iptal edilir.",
+        "Evet, geri al", "Vazgeç", true
+      );
+      if (ok) {
+        try {
+          await unpayPromissory(id);
+          toast("Ödeme geri alındı", "success");
+          await loadSenets();
+        } catch (err) { toast("Hata: " + err.message, "error"); }
+      }
+    } else if (act === "receipt") {
+      window.location.href = `makbuz.html?id=${id}`;
+    }
+  });
+
+  async function handlePay(senet, btn) {
+    // Ödeme modalı aç
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal" style="max-width:480px">
+        <div class="modal-header">
+          <div>
+            <h3 class="t-head" style="margin:0">Ödeme Al</h3>
+            <div class="t-small">${escapeHtml(senet.studentAdi)} · ${senet.taksitNo}. taksit</div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="preview-card" style="background:linear-gradient(180deg,var(--success-tint) 0%,transparent 100%);border:1px solid var(--line);border-radius:var(--r-md);padding:18px;text-align:center;margin-bottom:18px">
+            <div style="font-size:12px;color:var(--ink-3)">Tahsil Edilecek</div>
+            <div style="font-size:28px;font-weight:600;color:#248a3d;letter-spacing:-0.02em">${TL(senet.taksitTutari)}</div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label class="field-label">Ödeme Şekli</label>
+            <select class="select" id="odemeSekliInput">
+              <option value="nakit">Nakit</option>
+              <option value="havale">Havale / EFT</option>
+              <option value="kart">Kart</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label class="field-label">Ödeme Tarihi</label>
+            <input type="date" class="input" id="odemeTarihiInput">
+          </div>
+          <div class="field">
+            <label class="field-label">Not (opsiyonel)</label>
+            <input type="text" class="input" id="aciklamaInput" placeholder="Kısa not...">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-act="cancel">Vazgeç</button>
+          <button class="btn btn-primary" data-act="confirm">Tahsil Et</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector("#odemeTarihiInput").value = new Date().toISOString().split("T")[0];
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+    modal.querySelector("[data-act='cancel']").onclick = () => modal.remove();
+
+    modal.querySelector("[data-act='confirm']").onclick = async (ev) => {
+      const odemeSekli = modal.querySelector("#odemeSekliInput").value;
+      const tarihStr = modal.querySelector("#odemeTarihiInput").value;
+      const aciklama = modal.querySelector("#aciklamaInput").value.trim();
+      const confirmBtn = ev.target;
+      setLoading(confirmBtn, true);
+      try {
+        const { makbuzNo } = await payPromissory(senet.id, {
+          odemeSekli,
+          odemeTarihi: new Date(tarihStr),
+          aciklama,
+          createdByUid: profile.uid
+        });
+        modal.remove();
+        toast(`Ödeme alındı · Makbuz #${makbuzNo} ✓`, "success");
+        await loadSenets();
+      } catch (err) {
+        toast("Hata: " + err.message, "error");
+        setLoading(confirmBtn, false);
+        confirmBtn.textContent = "Tahsil Et";
+      }
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  let searchTimer;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(render, 150);
+  });
+  statusFilter.addEventListener("change", render);
+  monthFilter.addEventListener("change", render);
+
+  await loadSenets();
+</script>
+
+</body>
+</html>

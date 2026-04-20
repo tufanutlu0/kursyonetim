@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Senet Oluştur · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .form-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .section-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .preview-card {
+    background: linear-gradient(180deg, var(--accent-tint) 0%, transparent 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .preview-value {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .preview-sub {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-top: 4px;
+  }
+
+  .student-picker {
+    position: relative;
+  }
+  .student-results {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+  }
+  .student-results.open { display: block; }
+  .student-result-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .student-result-item:hover { background: var(--bg-subtle); }
+  .student-result-item:last-child { border-bottom: none; }
+
+  .selected-student {
+    padding: 14px 16px;
+    background: var(--accent-tint);
+    border-radius: var(--r-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .selected-student .remove-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .veli-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .veli-option {
+    padding: 14px;
+    border: 2px solid var(--line);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease);
+    background: white;
+  }
+  .veli-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .veli-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .veli-option-label { font-size: 11px; text-transform: uppercase; color: var(--ink-3); font-weight: 600; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .veli-option-name { font-size: 14px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">Dashboard</a>
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item" href="ogrenciler.html">Öğrenciler</a>
+    <a class="nav-item" href="ogretmenler.html">Öğretmenler</a>
+    <a class="nav-item" href="siniflar.html">Sınıflar</a>
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item active" href="senetler.html">Senetler</a>
+    <a class="nav-item" href="kasa.html" data-hide-role="mudur">Kasa & Muhasebe</a>
+    <a class="nav-item" href="raporlar.html" data-hide-role="mudur">Raporlar</a>
+    <div style="flex:1"></div>
+    <a class="nav-item" href="#" data-action="logout">Çıkış Yap</a>
+  </aside>
+
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="senetler.html" class="btn btn-ghost btn-sm" style="padding:0 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div>
+          <div class="t-tiny" style="color:var(--ink-4)">Finans</div>
+          <div class="t-head">Yeni Senet Planı</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page">
+      <form id="senetForm" class="animate-in" autocomplete="off">
+
+        <!-- Öğrenci Seç -->
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Öğrenci Seç</div>
+              <div class="t-small">Hangi öğrenci için senet düzenleniyor?</div>
+            </div>
+          </div>
+
+          <div id="studentPickerWrap" class="student-picker">
+            <input type="text" class="input" id="studentSearch" placeholder="Öğrenci adı yaz…" autocomplete="off">
+            <div class="student-results" id="studentResults"></div>
+          </div>
+
+          <div id="selectedStudent" style="display:none;margin-top:12px"></div>
+        </div>
+
+        <!-- Veli Seç -->
+        <div class="form-section" id="veliSection" style="display:none">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Senet Sorumlusu</div>
+              <div class="t-small">Senetler hangi veli adına düzenlensin?</div>
+            </div>
+          </div>
+          <div class="veli-choice" id="veliChoice"></div>
+        </div>
+
+        <!-- Plan -->
+        <div class="form-section" id="planSection" style="display:none">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m-6 4h6m-6 4h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Ödeme Planı</div>
+              <div class="t-small">Toplam tutar ve taksit bilgileri</div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px">
+            <div class="field">
+              <label class="field-label">Toplam Tutar (TL) *</label>
+              <input type="number" class="input" name="toplamTutar" min="0" step="0.01" required placeholder="Örn: 36000">
+            </div>
+            <div class="field">
+              <label class="field-label">Taksit Sayısı *</label>
+              <input type="number" class="input" name="taksitSayisi" min="1" max="24" value="9" required>
+            </div>
+            <div class="field">
+              <label class="field-label">İlk Ödeme Tarihi *</label>
+              <input type="date" class="input" name="ilkOdemeGunu" required>
+            </div>
+            <div class="field">
+              <label class="field-label">Açıklama</label>
+              <input type="text" class="input" name="aciklama" placeholder="Örn: 2025-2026 LGS dönem ücreti">
+            </div>
+          </div>
+
+          <div class="preview-card" id="previewCard" style="display:none">
+            <div class="preview-sub">Aylık Taksit</div>
+            <div class="preview-value" id="previewAylik">— TL</div>
+            <div class="preview-sub" id="previewDetay"></div>
+          </div>
+
+          <div id="taksitListe" style="display:none">
+            <div class="t-tiny" style="margin-bottom:10px">Taksit Takvimi</div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width:60px">#</th>
+                    <th>Vade Tarihi</th>
+                    <th style="text-align:right">Tutar</th>
+                  </tr>
+                </thead>
+                <tbody id="taksitTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 0 32px">
+          <a href="senetler.html" class="btn btn-secondary">Vazgeç</a>
+          <button type="submit" class="btn btn-primary btn-lg" id="saveBtn" disabled>Senet Planını Oluştur</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL, fmtDateLong, toast, setLoading, qs } from "../js/utils.js";
+  import { createPromissoryPlan } from "../js/finance.js";
+  import {
+    collection, doc, getDoc, getDocs, query, orderBy, where
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin", "mudur"]);
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const form = document.getElementById("senetForm");
+  const saveBtn = document.getElementById("saveBtn");
+  const studentSearch = document.getElementById("studentSearch");
+  const studentResults = document.getElementById("studentResults");
+  const selectedStudent = document.getElementById("selectedStudent");
+  const veliSection = document.getElementById("veliSection");
+  const veliChoice = document.getElementById("veliChoice");
+  const planSection = document.getElementById("planSection");
+  const previewCard = document.getElementById("previewCard");
+  const previewAylik = document.getElementById("previewAylik");
+  const previewDetay = document.getElementById("previewDetay");
+  const taksitListe = document.getElementById("taksitListe");
+  const taksitTable = document.getElementById("taksitTable");
+
+  let selectedStudentData = null;
+  let selectedVeli = null;
+  let allStudents = [];
+
+  // Öğrencileri yükle
+  async function loadStudents() {
+    const snap = await getDocs(query(
+      collection(db, "students"),
+      where("aktif", "==", true)
+    ));
+    snap.forEach(d => allStudents.push({ id: d.id, ...d.data() }));
+  }
+
+  // İlk tarih: 1 ay sonra
+  const firstDate = new Date();
+  firstDate.setMonth(firstDate.getMonth() + 1);
+  firstDate.setDate(5); // Ayın 5'i genelde taksit günü
+  form.elements["ilkOdemeGunu"].value = firstDate.toISOString().split("T")[0];
+
+  // Öğrenci arama
+  studentSearch.addEventListener("input", () => {
+    const q = studentSearch.value.trim().toLocaleLowerCase("tr");
+    if (!q) { studentResults.classList.remove("open"); return; }
+    const matches = allStudents.filter(s =>
+      (s.adSoyad || "").toLocaleLowerCase("tr").includes(q) ||
+      (s.okul || "").toLocaleLowerCase("tr").includes(q)
+    ).slice(0, 8);
+
+    if (matches.length === 0) {
+      studentResults.innerHTML = `<div class="student-result-item" style="color:var(--ink-4);cursor:default">Eşleşme yok</div>`;
+    } else {
+      studentResults.innerHTML = matches.map(s => `
+        <div class="student-result-item" data-id="${s.id}">
+          <div style="font-weight:500">${escapeHtml(s.adSoyad)}</div>
+          <div class="t-small">${escapeHtml(s.okul || "—")} · ${escapeHtml(s.sinif || "—")}</div>
+        </div>
+      `).join("");
+    }
+    studentResults.classList.add("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#studentPickerWrap")) studentResults.classList.remove("open");
+  });
+
+  studentResults.addEventListener("click", (e) => {
+    const item = e.target.closest(".student-result-item");
+    if (!item || !item.dataset.id) return;
+    pickStudent(allStudents.find(s => s.id === item.dataset.id));
+  });
+
+  function pickStudent(s) {
+    selectedStudentData = s;
+    document.getElementById("studentPickerWrap").style.display = "none";
+    studentResults.classList.remove("open");
+
+    const initials = (s.adSoyad || "?").split(" ").map(x => x[0]).slice(0,2).join("").toUpperCase();
+    selectedStudent.style.display = "block";
+    selectedStudent.innerHTML = `
+      <div class="selected-student">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:white;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">${initials}</div>
+          <div>
+            <div style="font-weight:600">${escapeHtml(s.adSoyad)}</div>
+            <div style="font-size:12px;color:var(--ink-2)">${escapeHtml(s.okul || "—")} · ${escapeHtml(s.sinif || "—")}</div>
+          </div>
+        </div>
+        <button type="button" class="remove-btn">Değiştir</button>
+      </div>
+    `;
+    selectedStudent.querySelector(".remove-btn").onclick = () => {
+      selectedStudentData = null;
+      selectedVeli = null;
+      document.getElementById("studentPickerWrap").style.display = "block";
+      selectedStudent.style.display = "none";
+      veliSection.style.display = "none";
+      planSection.style.display = "none";
+      studentSearch.value = "";
+      checkReady();
+    };
+
+    // Veli seçim ekranı
+    showVeliChoice(s);
+  }
+
+  function showVeliChoice(s) {
+    const annNam = s.anne?.adSoyad || "";
+    const babNam = s.baba?.adSoyad || "";
+    const preferred = s.senetSorumlusu || "baba";
+
+    veliChoice.innerHTML = `
+      <div class="veli-option ${annNam ? '' : 'disabled'} ${preferred === 'anne' && annNam ? 'selected' : ''}" data-veli="anne">
+        <div class="veli-option-label">Anne</div>
+        <div class="veli-option-name">${escapeHtml(annNam || "— bilgi yok —")}</div>
+        ${s.anne?.tcNo ? `<div class="t-small">TC: ${s.anne.tcNo}</div>` : ''}
+      </div>
+      <div class="veli-option ${babNam ? '' : 'disabled'} ${preferred === 'baba' && babNam ? 'selected' : ''}" data-veli="baba">
+        <div class="veli-option-label">Baba</div>
+        <div class="veli-option-name">${escapeHtml(babNam || "— bilgi yok —")}</div>
+        ${s.baba?.tcNo ? `<div class="t-small">TC: ${s.baba.tcNo}</div>` : ''}
+      </div>
+    `;
+
+    veliChoice.querySelectorAll(".veli-option").forEach(opt => {
+      if (opt.classList.contains("disabled")) return;
+      opt.addEventListener("click", () => {
+        veliChoice.querySelectorAll(".veli-option").forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
+        selectedVeli = opt.dataset.veli;
+        planSection.style.display = "block";
+        checkReady();
+      });
+    });
+
+    // Auto-select preferred if available
+    const preferredData = s[preferred];
+    if (preferredData?.adSoyad) {
+      selectedVeli = preferred;
+      planSection.style.display = "block";
+    }
+
+    veliSection.style.display = "block";
+    checkReady();
+  }
+
+  // Canlı önizleme
+  function updatePreview() {
+    const toplam = parseFloat(form.elements["toplamTutar"].value) || 0;
+    const adet = parseInt(form.elements["taksitSayisi"].value) || 0;
+    const ilkTarih = form.elements["ilkOdemeGunu"].value;
+
+    if (toplam <= 0 || adet < 1 || !ilkTarih) {
+      previewCard.style.display = "none";
+      taksitListe.style.display = "none";
+      return;
+    }
+
+    const aylik = Math.round((toplam / adet) * 100) / 100;
+    const sonTaksit = Math.round((toplam - (aylik * (adet - 1))) * 100) / 100;
+
+    previewCard.style.display = "block";
+    previewAylik.textContent = TL(aylik);
+    previewDetay.textContent = `${adet} ay × ${TL(aylik)} = ${TL(toplam)}` + (sonTaksit !== aylik ? ` (son taksit ${TL(sonTaksit)})` : "");
+
+    // Takvim
+    taksitTable.innerHTML = "";
+    const base = new Date(ilkTarih);
+    for (let i = 0; i < adet; i++) {
+      const d = new Date(base);
+      d.setMonth(d.getMonth() + i);
+      const tut = (i === adet - 1) ? sonTaksit : aylik;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="font-weight:500">${i + 1}</td>
+        <td>${fmtDateLong(d)}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums">${TL(tut)}</td>
+      `;
+      taksitTable.appendChild(tr);
+    }
+    taksitListe.style.display = "block";
+  }
+
+  ["toplamTutar", "taksitSayisi", "ilkOdemeGunu"].forEach(name => {
+    form.elements[name].addEventListener("input", () => { updatePreview(); checkReady(); });
+  });
+
+  function checkReady() {
+    const toplam = parseFloat(form.elements["toplamTutar"].value) || 0;
+    const adet = parseInt(form.elements["taksitSayisi"].value) || 0;
+    const tarih = form.elements["ilkOdemeGunu"].value;
+    saveBtn.disabled = !(selectedStudentData && selectedVeli && toplam > 0 && adet > 0 && tarih);
+  }
+
+  // Submit
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!selectedStudentData || !selectedVeli) {
+      toast("Öğrenci ve veli seçin", "error");
+      return;
+    }
+    const veliData = selectedStudentData[selectedVeli];
+    if (!veliData?.adSoyad) {
+      toast(`${selectedVeli === 'anne' ? 'Anne' : 'Baba'} bilgisi eksik. Önce öğrenci kartına ekleyin.`, "error");
+      return;
+    }
+
+    setLoading(saveBtn, true);
+    try {
+      const { senetler } = await createPromissoryPlan({
+        studentId: selectedStudentData.id,
+        studentAdi: selectedStudentData.adSoyad,
+        veliTipi: selectedVeli,
+        veliAdi: veliData.adSoyad,
+        veliTcNo: veliData.tcNo || "",
+        toplamTutar: parseFloat(form.elements["toplamTutar"].value),
+        taksitSayisi: parseInt(form.elements["taksitSayisi"].value),
+        ilkOdemeGunu: new Date(form.elements["ilkOdemeGunu"].value),
+        aciklama: form.elements["aciklama"].value.trim(),
+        createdByUid: profile.uid
+      });
+      toast(`${senetler.length} taksit oluşturuldu ✓`, "success");
+      setTimeout(() => {
+        window.location.href = `senetler.html?student=${selectedStudentData.id}`;
+      }, 700);
+    } catch (err) {
+      console.error(err);
+      toast("Hata: " + err.message, "error");
+      setLoading(saveBtn, false);
+      saveBtn.textContent = "Senet Planını Oluştur";
+    }
+  });
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // URL'den öğrenci ID geldiyse (örneğin öğrenci detay sayfasından)
+  await loadStudents();
+  const preStudentId = qs("student");
+  if (preStudentId) {
+    const s = allStudents.find(x => x.id === preStudentId);
+    if (s) pickStudent(s);
+  }
+</script>
+
+</body>
+</html>

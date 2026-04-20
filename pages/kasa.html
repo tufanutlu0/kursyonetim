@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasa & Muhasebe · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    padding: 20px;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+  }
+  .summary-card.gelir { background: linear-gradient(180deg, var(--success-tint) 0%, var(--bg-elevated) 100%); }
+  .summary-card.gider { background: linear-gradient(180deg, var(--danger-tint) 0%, var(--bg-elevated) 100%); }
+  .summary-card.net   { background: linear-gradient(180deg, var(--accent-tint) 0%, var(--bg-elevated) 100%); }
+  .summary-label { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-value { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+  .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+
+  .gelir-icon { background: var(--success-tint); color: #248a3d; }
+  .gider-icon { background: var(--danger-tint); color: #c22a20; }
+  .kategori-tag {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    background: var(--bg-subtle);
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">Dashboard</a>
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item" href="ogrenciler.html">Öğrenciler</a>
+    <a class="nav-item" href="ogretmenler.html">Öğretmenler</a>
+    <a class="nav-item" href="siniflar.html">Sınıflar</a>
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item" href="senetler.html">Senetler</a>
+    <a class="nav-item active" href="kasa.html">Kasa & Muhasebe</a>
+    <a class="nav-item" href="raporlar.html">Raporlar</a>
+    <div style="flex:1"></div>
+    <a class="nav-item" href="#" data-action="logout">Çıkış Yap</a>
+  </aside>
+
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div>
+        <div class="t-tiny" style="color:var(--ink-4)">Finans</div>
+        <div class="t-head">Kasa & Muhasebe</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" id="newGiderBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Gider Ekle
+        </button>
+        <button class="btn btn-primary" id="newGelirBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Gelir Ekle
+        </button>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- Dönem Seç -->
+      <div class="filter-bar animate-in">
+        <div>
+          <div class="t-tiny">Dönem</div>
+          <select class="select" id="periodSelect" style="width:200px">
+            <option value="today">Bugün</option>
+            <option value="week">Bu Hafta</option>
+            <option value="month" selected>Bu Ay</option>
+            <option value="lastmonth">Geçen Ay</option>
+            <option value="year">Bu Yıl</option>
+            <option value="all">Tüm Zamanlar</option>
+          </select>
+        </div>
+        <div>
+          <div class="t-tiny">Tip</div>
+          <select class="select" id="typeFilter" style="width:140px">
+            <option value="all">Hepsi</option>
+            <option value="gelir">Sadece Gelir</option>
+            <option value="gider">Sadece Gider</option>
+          </select>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+
+      <!-- Özet -->
+      <div class="summary-grid animate-in">
+        <div class="summary-card gelir">
+          <div class="summary-label">Toplam Gelir</div>
+          <div class="summary-value" id="totalGelir" style="color:#248a3d">—</div>
+          <div class="t-small" id="countGelir" style="margin-top:4px">—</div>
+        </div>
+        <div class="summary-card gider">
+          <div class="summary-label">Toplam Gider</div>
+          <div class="summary-value" id="totalGider" style="color:#c22a20">—</div>
+          <div class="t-small" id="countGider" style="margin-top:4px">—</div>
+        </div>
+        <div class="summary-card net">
+          <div class="summary-label">Net Bakiye</div>
+          <div class="summary-value" id="totalNet">—</div>
+          <div class="t-small" style="margin-top:4px">Gelir - Gider</div>
+        </div>
+      </div>
+
+      <!-- Kategori Dökümü -->
+      <div class="card" style="padding:22px;margin-bottom:20px">
+        <div class="t-head" style="margin-bottom:12px">Kategori Dağılımı</div>
+        <div id="categoryBreakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          <div class="t-small" style="grid-column:1/-1;text-align:center;padding:24px">Yükleniyor…</div>
+        </div>
+      </div>
+
+      <!-- Hareketler -->
+      <div class="table-wrap animate-in">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tarih</th>
+              <th>Tip</th>
+              <th>Kategori</th>
+              <th>Açıklama</th>
+              <th>Ödeme</th>
+              <th style="text-align:right">Tutar</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="cashTable">
+            <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--ink-3)">Yükleniyor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL, fmtDate, toast, setLoading, confirmDialog, openModal } from "../js/utils.js";
+  import { addCashFlow, getCashSummary, KATEGORI_LABELS, ODEME_SEKLI_LABELS } from "../js/finance.js";
+  import {
+    collection, doc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin"]); // sadece admin
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const periodSelect = document.getElementById("periodSelect");
+  const typeFilter = document.getElementById("typeFilter");
+  const tbody = document.getElementById("cashTable");
+  const categoryBreakdown = document.getElementById("categoryBreakdown");
+
+  let currentData = null;
+
+  function getPeriodDates() {
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(now);
+    end.setHours(23,59,59,999);
+
+    switch (periodSelect.value) {
+      case "today": start.setHours(0,0,0,0); break;
+      case "week":
+        start.setDate(start.getDate() - start.getDay() + 1);
+        start.setHours(0,0,0,0);
+        break;
+      case "month":
+        start.setDate(1); start.setHours(0,0,0,0);
+        break;
+      case "lastmonth":
+        start.setMonth(start.getMonth() - 1);
+        start.setDate(1); start.setHours(0,0,0,0);
+        end.setDate(0);
+        break;
+      case "year":
+        start.setMonth(0, 1); start.setHours(0,0,0,0);
+        break;
+      case "all":
+        return { start: new Date(2020, 0, 1), end };
+    }
+    return { start, end };
+  }
+
+  async function loadData() {
+    try {
+      const { start, end } = getPeriodDates();
+      currentData = await getCashSummary(start, end);
+      render();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--danger)">Yüklenemedi: ${e.message}</td></tr>`;
+    }
+  }
+
+  function render() {
+    if (!currentData) return;
+
+    let filtered = currentData.hareketler;
+    if (typeFilter.value !== "all") {
+      filtered = filtered.filter(h => h.tip === typeFilter.value);
+    }
+
+    // Özet
+    let gelirSum = 0, giderSum = 0, gelirCount = 0, giderCount = 0;
+    filtered.forEach(h => {
+      if (h.tip === "gelir") { gelirSum += h.tutar || 0; gelirCount++; }
+      else { giderSum += h.tutar || 0; giderCount++; }
+    });
+    document.getElementById("totalGelir").textContent = TL(gelirSum);
+    document.getElementById("totalGider").textContent = TL(giderSum);
+    document.getElementById("totalNet").textContent = TL(gelirSum - giderSum);
+    document.getElementById("totalNet").style.color = (gelirSum - giderSum) >= 0 ? "#248a3d" : "#c22a20";
+    document.getElementById("countGelir").textContent = `${gelirCount} işlem`;
+    document.getElementById("countGider").textContent = `${giderCount} işlem`;
+
+    // Kategori
+    const cats = {};
+    filtered.forEach(h => {
+      const key = `${h.tip}:${h.kategori}`;
+      cats[key] = (cats[key] || 0) + (h.tutar || 0);
+    });
+    const sortedCats = Object.entries(cats).sort((a,b) => b[1] - a[1]);
+    if (sortedCats.length === 0) {
+      categoryBreakdown.innerHTML = `<div class="t-small" style="grid-column:1/-1;text-align:center;padding:24px">Bu dönemde işlem yok</div>`;
+    } else {
+      categoryBreakdown.innerHTML = sortedCats.map(([key, tutar]) => {
+        const [tip, kat] = key.split(":");
+        const label = KATEGORI_LABELS[kat] || kat;
+        const color = tip === "gelir" ? "#248a3d" : "#c22a20";
+        return `
+          <div style="padding:12px 14px;background:var(--bg-subtle);border-radius:var(--r-md)">
+            <div style="font-size:12px;color:var(--ink-3);margin-bottom:2px">${label}</div>
+            <div style="font-size:16px;font-weight:600;color:${color};font-variant-numeric:tabular-nums">${TL(tutar)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Tablo
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--ink-3)">Bu dönemde kayıt yok</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = "";
+    filtered.forEach(h => {
+      const tr = document.createElement("tr");
+      const isGelir = h.tip === "gelir";
+      tr.innerHTML = `
+        <td>${fmtDate(h.tarih)}</td>
+        <td>
+          <div style="width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center" class="${isGelir ? 'gelir-icon' : 'gider-icon'}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              ${isGelir ? '<path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-linecap="round" stroke-linejoin="round"/>' : '<path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"/>'}
+            </svg>
+          </div>
+        </td>
+        <td><span class="kategori-tag">${KATEGORI_LABELS[h.kategori] || h.kategori}</span></td>
+        <td style="max-width:320px" class="truncate">${escapeHtml(h.aciklama || "—")}</td>
+        <td class="t-small">${ODEME_SEKLI_LABELS[h.odemeSekli] || h.odemeSekli || "—"}</td>
+        <td style="text-align:right;font-weight:600;color:${isGelir ? '#248a3d' : '#c22a20'};font-variant-numeric:tabular-nums">
+          ${isGelir ? '+' : '-'} ${TL(h.tutar)}
+        </td>
+        <td>
+          ${h.iliskiliTip === "senet"
+            ? '<span class="t-tiny" style="color:var(--ink-4)">OTOMATIK</span>'
+            : `<button class="mini-action" data-del="${h.id}" style="background:none;border:1px solid var(--line-strong);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--danger)">Sil</button>`
+          }
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Sil
+  tbody.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-del]");
+    if (!btn) return;
+    const ok = await confirmDialog(
+      "Kaydı sil?",
+      "Bu kasa hareketini silmek istediğinize emin misiniz?",
+      "Evet, sil", "Vazgeç", true
+    );
+    if (!ok) return;
+    try {
+      await deleteDoc(doc(db, "cashFlow", btn.dataset.del));
+      toast("Kayıt silindi", "success");
+      await loadData();
+    } catch (err) { toast("Silinemedi: " + err.message, "error"); }
+  });
+
+  // Yeni hareket modalı
+  function openCashModal(tip) {
+    const kategoriOptions = Object.entries(KATEGORI_LABELS)
+      .filter(([k]) => tip === "gelir" ? ["kayit_ucreti", "senet_tahsilat", "diger"].includes(k) : !["senet_tahsilat", "kayit_ucreti"].includes(k))
+      .map(([k, l]) => `<option value="${k}">${l}</option>`).join("");
+
+    const inner = `
+      <div class="modal-header">
+        <h3 class="t-head" style="margin:0">${tip === "gelir" ? "Gelir Ekle" : "Gider Ekle"}</h3>
+      </div>
+      <div class="modal-body">
+        <div class="field" style="margin-bottom:14px">
+          <label class="field-label">Tarih</label>
+          <input type="date" class="input" id="tarihInp">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label class="field-label">Kategori *</label>
+          <select class="select" id="katInp" required>${kategoriOptions}</select>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label class="field-label">Tutar (TL) *</label>
+          <input type="number" class="input" id="tutarInp" min="0" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label class="field-label">Ödeme Şekli</label>
+          <select class="select" id="odemeInp">
+            <option value="nakit">Nakit</option>
+            <option value="havale">Havale / EFT</option>
+            <option value="kart">Kart</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Açıklama</label>
+          <textarea class="textarea" id="aciklamaInp" rows="2" placeholder="Detay açıklama..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-act="cancel">Vazgeç</button>
+        <button class="btn ${tip === "gelir" ? "btn-primary" : "btn-primary"}" data-act="save">Kaydet</button>
+      </div>
+    `;
+    const m = openModal(inner, { maxWidth: 480 });
+    m.querySelector("#tarihInp").value = new Date().toISOString().split("T")[0];
+    m.querySelector("[data-act='cancel']").onclick = () => m.close();
+    m.querySelector("[data-act='save']").onclick = async (ev) => {
+      const kat = m.querySelector("#katInp").value;
+      const tutar = parseFloat(m.querySelector("#tutarInp").value);
+      const tarih = m.querySelector("#tarihInp").value;
+      const aciklama = m.querySelector("#aciklamaInp").value.trim();
+      const odeme = m.querySelector("#odemeInp").value;
+
+      if (!kat || !tutar || tutar <= 0 || !tarih) {
+        toast("Kategori, tutar ve tarih zorunlu", "error");
+        return;
+      }
+      setLoading(ev.target, true);
+      try {
+        await addCashFlow({
+          tarih: new Date(tarih + "T12:00:00"),
+          tip, kategori: kat, tutar, aciklama, odemeSekli: odeme,
+          createdByUid: profile.uid
+        });
+        m.close();
+        toast(`${tip === "gelir" ? "Gelir" : "Gider"} eklendi ✓`, "success");
+        await loadData();
+      } catch (err) {
+        toast("Hata: " + err.message, "error");
+        setLoading(ev.target, false);
+        ev.target.textContent = "Kaydet";
+      }
+    };
+  }
+
+  document.getElementById("newGelirBtn").onclick = () => openCashModal("gelir");
+  document.getElementById("newGiderBtn").onclick = () => openCashModal("gider");
+
+  periodSelect.addEventListener("change", loadData);
+  typeFilter.addEventListener("change", render);
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  await loadData();
+</script>
+
+</body>
+</html>
