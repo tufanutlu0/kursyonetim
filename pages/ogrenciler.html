@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Öğrenciler · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+  .search-input input {
+    padding-left: 40px;
+  }
+  .search-input svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-4);
+    pointer-events: none;
+  }
+  .avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-tint);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--ink-3);
+  }
+  .empty-state svg {
+    margin-bottom: 16px;
+    color: var(--ink-4);
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item active" href="ogrenciler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Öğrenciler</span>
+    </a>
+    <a class="nav-item" href="ogretmenler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Öğretmenler</span>
+    </a>
+    <a class="nav-item" href="siniflar.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Sınıflar</span>
+    </a>
+
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item" href="senetler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Senetler</span>
+    </a>
+    <a class="nav-item" href="kasa.html" data-hide-role="mudur">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Kasa & Muhasebe</span>
+    </a>
+
+    <div style="flex:1"></div>
+
+    <a class="nav-item" href="#" data-action="logout">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Çıkış Yap</span>
+    </a>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div>
+        <div class="t-tiny" style="color:var(--ink-4)">Kayıtlar</div>
+        <div class="t-head">Öğrenciler</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="ogrenci-detay.html" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+          Yeni Öğrenci
+        </a>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- Filter Bar -->
+      <div class="filter-bar animate-in">
+        <div class="search-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          <input type="text" class="input" id="searchInput" placeholder="İsim, okul, telefon veya TC ile ara…">
+        </div>
+        <select class="select" id="classFilter" style="max-width:200px">
+          <option value="">Tüm Sınıflar</option>
+        </select>
+        <select class="select" id="statusFilter" style="max-width:160px">
+          <option value="aktif">Aktif</option>
+          <option value="pasif">Pasif</option>
+          <option value="all">Hepsi</option>
+        </select>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap" class="animate-in">
+        <span class="badge badge-neutral" id="countBadge">Yükleniyor…</span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap animate-in">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:40px"></th>
+              <th>Ad Soyad</th>
+              <th>Okul / Sınıf</th>
+              <th>Telefon</th>
+              <th>Veli</th>
+              <th>Kayıt</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="studentsTable">
+            <tr><td colspan="7" style="padding:40px;text-align:center;color:var(--ink-3)">Öğrenciler yükleniyor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { TL, fmtDate, fmtPhone, toast } from "../js/utils.js";
+  import {
+    collection, query, where, orderBy, getDocs, limit
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin", "mudur"]);
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const tbody = document.getElementById("studentsTable");
+  const searchInput = document.getElementById("searchInput");
+  const classFilter = document.getElementById("classFilter");
+  const statusFilter = document.getElementById("statusFilter");
+  const countBadge = document.getElementById("countBadge");
+
+  let allStudents = [];
+  let allClasses = {};
+
+  // ---- SINIFLARI YÜKLE ----
+  async function loadClasses() {
+    try {
+      const snap = await getDocs(collection(db, "classes"));
+      snap.forEach(d => {
+        const c = d.data();
+        allClasses[d.id] = c;
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = c.ad || "(isimsiz sınıf)";
+        classFilter.appendChild(opt);
+      });
+    } catch (e) {
+      console.warn("Sınıflar yüklenemedi (henüz yok olabilir):", e);
+    }
+  }
+
+  // ---- ÖĞRENCİLERİ YÜKLE ----
+  async function loadStudents() {
+    try {
+      const snap = await getDocs(query(
+        collection(db, "students"),
+        orderBy("createdAt", "desc")
+      ));
+      allStudents = [];
+      snap.forEach(d => allStudents.push({ id: d.id, ...d.data() }));
+      render();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--danger)">Öğrenciler yüklenemedi: ${e.message}</td></tr>`;
+    }
+  }
+
+  // ---- FİLTRELEME ----
+  function filter() {
+    const q = searchInput.value.trim().toLocaleLowerCase("tr");
+    const clsId = classFilter.value;
+    const status = statusFilter.value;
+
+    return allStudents.filter(s => {
+      // Status
+      if (status === "aktif" && s.aktif === false) return false;
+      if (status === "pasif" && s.aktif !== false) return false;
+
+      // Class
+      if (clsId && s.kursSinifId !== clsId) return false;
+
+      // Search
+      if (q) {
+        const hay = [
+          s.adSoyad, s.okul, s.sinif, s.telefon, s.tcNo,
+          s.anne?.adSoyad, s.baba?.adSoyad
+        ].filter(Boolean).join(" ").toLocaleLowerCase("tr");
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  // ---- RENDER ----
+  function render() {
+    const list = filter();
+    countBadge.textContent = `${list.length} öğrenci`;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="font-size:15px;font-weight:500;color:var(--ink-2);margin-bottom:4px">Henüz öğrenci yok</div>
+            <div class="t-small" style="margin-bottom:16px">İlk öğrencini ekleyerek başla.</div>
+            <a href="ogrenci-detay.html" class="btn btn-primary">+ İlk Öğrenciyi Ekle</a>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    list.forEach(s => {
+      const tr = document.createElement("tr");
+      tr.style.cursor = "pointer";
+      tr.onclick = () => window.location.href = `ogrenci-detay.html?id=${s.id}`;
+
+      const initials = (s.adSoyad || "?").split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase();
+      const veli = s.senetSorumlusu === "anne" ? s.anne : s.baba;
+      const veliLabel = veli?.adSoyad ? `${veli.adSoyad} (${s.senetSorumlusu === "anne" ? "Anne" : "Baba"})` : "—";
+      const clsAd = s.kursSinifId ? (allClasses[s.kursSinifId]?.ad || "—") : "—";
+
+      tr.innerHTML = `
+        <td><div class="avatar-sm">${initials}</div></td>
+        <td>
+          <div style="font-weight:500">${escapeHtml(s.adSoyad || "—")}</div>
+          ${s.aktif === false ? '<span class="badge badge-neutral" style="margin-top:2px">Pasif</span>' : ''}
+        </td>
+        <td>
+          <div>${escapeHtml(s.okul || "—")}</div>
+          <div class="t-small">${escapeHtml(s.sinif || "—")} · ${escapeHtml(clsAd)}</div>
+        </td>
+        <td>${fmtPhone(s.telefon)}</td>
+        <td style="font-size:13px">${escapeHtml(veliLabel)}</td>
+        <td class="t-small">${fmtDate(s.kayitTarihi)}</td>
+        <td>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="2"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  // ---- LISTENERS ----
+  let searchTimer;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(render, 150);
+  });
+  classFilter.addEventListener("change", render);
+  statusFilter.addEventListener("change", render);
+
+  // ---- START ----
+  await loadClasses();
+  await loadStudents();
+</script>
+
+</body>
+</html>

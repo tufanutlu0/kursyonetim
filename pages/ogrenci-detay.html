@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Öğrenci Detay · Yıldız Kurs</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .form-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .section-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .veli-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    background: var(--bg-subtle);
+    border-radius: var(--r-md);
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .veli-tab {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink-2);
+    transition: all var(--dur-fast) var(--ease);
+    border: none;
+    background: transparent;
+  }
+  .veli-tab.active {
+    background: white;
+    color: var(--ink-1);
+    box-shadow: var(--shadow-xs);
+  }
+  .veli-panel { display: none; }
+  .veli-panel.active { display: block; }
+
+  .senet-sorumlusu-box {
+    background: var(--accent-tint);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .radio-group { display: flex; gap: 18px; }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .validation-msg {
+    font-size: 12px;
+    color: var(--danger);
+    min-height: 16px;
+    margin-top: 2px;
+  }
+  .input.invalid, .select.invalid { border-color: var(--danger); }
+
+  .sticky-footer {
+    position: sticky;
+    bottom: 0;
+    background: rgba(251, 251, 253, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--line);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 -32px -32px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#0055a5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">Y</div>
+      <span>Yıldız Kurs</span>
+    </div>
+
+    <div class="nav-group-label"><span class="nav-label">Genel</span></div>
+    <a class="nav-item" href="admin.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <div class="nav-group-label"><span class="nav-label">Kayıtlar</span></div>
+    <a class="nav-item active" href="ogrenciler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Öğrenciler</span>
+    </a>
+    <a class="nav-item" href="ogretmenler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Öğretmenler</span>
+    </a>
+    <a class="nav-item" href="siniflar.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Sınıflar</span>
+    </a>
+
+    <div class="nav-group-label"><span class="nav-label">Finans</span></div>
+    <a class="nav-item" href="senetler.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Senetler</span>
+    </a>
+    <a class="nav-item" href="kasa.html" data-hide-role="mudur">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Kasa & Muhasebe</span>
+    </a>
+
+    <div style="flex:1"></div>
+
+    <a class="nav-item" href="#" data-action="logout">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Çıkış Yap</span>
+    </a>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="app-main">
+
+    <header class="topbar no-print">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="ogrenciler.html" class="btn btn-ghost btn-sm" style="padding:0 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div>
+          <div class="t-tiny" style="color:var(--ink-4)" id="crumb">Yeni Kayıt</div>
+          <div class="t-head" id="pageTitle">Yeni Öğrenci</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px" id="actionButtons">
+        <button class="btn btn-danger btn-sm" id="deleteBtn" style="display:none">Sil</button>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <form id="studentForm" class="animate-in" autocomplete="off">
+
+        <!-- ===== Kişisel Bilgiler ===== -->
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Öğrenci Bilgileri</div>
+              <div class="t-small">Kişisel ve kimlik verileri</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label class="field-label">Ad Soyad *</label>
+              <input type="text" class="input" name="adSoyad" required placeholder="Örn: Ali Yılmaz">
+              <div class="validation-msg" data-for="adSoyad"></div>
+            </div>
+            <div class="field">
+              <label class="field-label">TC Kimlik No</label>
+              <input type="text" class="input" name="tcNo" maxlength="11" inputmode="numeric" placeholder="11 haneli">
+              <div class="validation-msg" data-for="tcNo"></div>
+            </div>
+            <div class="field">
+              <label class="field-label">Telefon</label>
+              <input type="tel" class="input" name="telefon" placeholder="05XX XXX XX XX">
+            </div>
+            <div class="field">
+              <label class="field-label">Doğum Tarihi</label>
+              <input type="date" class="input" name="dogumTarihi">
+            </div>
+            <div class="field">
+              <label class="field-label">Doğum Yeri</label>
+              <input type="text" class="input" name="dogumYeri" placeholder="Örn: Ankara">
+            </div>
+            <div class="field full">
+              <label class="field-label">Adres</label>
+              <textarea class="textarea" name="adres" rows="2" placeholder="Ev adresi"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Okul & Sınıf ===== -->
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Okul ve Sınıf</div>
+              <div class="t-small">Eğitim bilgileri</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Okul</label>
+              <input type="text" class="input" name="okul" placeholder="Örn: Yenimahalle Ortaokulu">
+            </div>
+            <div class="field">
+              <label class="field-label">Okul Sınıfı</label>
+              <input type="text" class="input" name="sinif" placeholder="Örn: 8-A">
+            </div>
+            <div class="field">
+              <label class="field-label">Kurs Sınıfı</label>
+              <select class="select" name="kursSinifId">
+                <option value="">(Atama yok)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Kayıt Tarihi</label>
+              <input type="date" class="input" name="kayitTarihi">
+            </div>
+            <div class="field full">
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="aktif" value="true" checked>
+                  Aktif öğrenci
+                </label>
+                <label>
+                  <input type="radio" name="aktif" value="false">
+                  Pasif
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Veli Bilgileri ===== -->
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Veli Bilgileri</div>
+              <div class="t-small">Anne ve baba iletişim bilgileri</div>
+            </div>
+          </div>
+
+          <div class="senet-sorumlusu-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div style="flex:1">
+              <div style="font-weight:500;margin-bottom:2px">Senet Sorumlusu</div>
+              <div style="font-size:12px;color:var(--ink-3)">Senetler hangi veli adına düzenlensin?</div>
+            </div>
+            <div class="radio-group">
+              <label><input type="radio" name="senetSorumlusu" value="anne"> Anne</label>
+              <label><input type="radio" name="senetSorumlusu" value="baba" checked> Baba</label>
+            </div>
+          </div>
+
+          <div class="veli-tabs">
+            <button type="button" class="veli-tab" data-tab="anne">Anne</button>
+            <button type="button" class="veli-tab active" data-tab="baba">Baba</button>
+          </div>
+
+          <!-- Anne -->
+          <div class="veli-panel" data-panel="anne">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label">Anne Ad Soyad</label>
+                <input type="text" class="input" name="anne.adSoyad">
+              </div>
+              <div class="field">
+                <label class="field-label">TC Kimlik</label>
+                <input type="text" class="input" name="anne.tcNo" maxlength="11" inputmode="numeric">
+                <div class="validation-msg" data-for="anne.tcNo"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">Telefon</label>
+                <input type="tel" class="input" name="anne.telefon" placeholder="05XX XXX XX XX">
+              </div>
+              <div class="field">
+                <label class="field-label">E-posta</label>
+                <input type="email" class="input" name="anne.email">
+              </div>
+              <div class="field">
+                <label class="field-label">Meslek</label>
+                <input type="text" class="input" name="anne.meslek">
+              </div>
+              <div class="field">
+                <label class="field-label">İş Yeri</label>
+                <input type="text" class="input" name="anne.isyeri">
+              </div>
+            </div>
+          </div>
+
+          <!-- Baba -->
+          <div class="veli-panel active" data-panel="baba">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label">Baba Ad Soyad</label>
+                <input type="text" class="input" name="baba.adSoyad">
+              </div>
+              <div class="field">
+                <label class="field-label">TC Kimlik</label>
+                <input type="text" class="input" name="baba.tcNo" maxlength="11" inputmode="numeric">
+                <div class="validation-msg" data-for="baba.tcNo"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">Telefon</label>
+                <input type="tel" class="input" name="baba.telefon" placeholder="05XX XXX XX XX">
+              </div>
+              <div class="field">
+                <label class="field-label">E-posta</label>
+                <input type="email" class="input" name="baba.email">
+              </div>
+              <div class="field">
+                <label class="field-label">Meslek</label>
+                <input type="text" class="input" name="baba.meslek">
+              </div>
+              <div class="field">
+                <label class="field-label">İş Yeri</label>
+                <input type="text" class="input" name="baba.isyeri">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Notlar ===== -->
+        <div class="form-section">
+          <div class="section-head">
+            <div class="section-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 8h10M7 12h6m-6 4h10m-7 5l-4-4H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-6l-4 4z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="t-head">Notlar</div>
+              <div class="t-small">İç notlar ve uyarılar</div>
+            </div>
+          </div>
+          <textarea class="textarea" name="notlar" rows="3" placeholder="Öğrenci hakkında notlar, özel durumlar..."></textarea>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="sticky-footer">
+          <div style="font-size:12px;color:var(--ink-3)" id="statusInfo">— kaydedilmedi</div>
+          <div style="display:flex;gap:8px">
+            <a href="ogrenciler.html" class="btn btn-secondary">Vazgeç</a>
+            <button type="submit" class="btn btn-primary" id="saveBtn">Kaydet</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, applyRoleUI, bindLogoutButtons } from "../js/auth-guard.js";
+  import { db } from "../js/firebase-config.js";
+  import { tcKimlikValid, toast, setLoading, confirmDialog, qs, fmtDateTime } from "../js/utils.js";
+  import {
+    collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
+    serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const { profile } = await requireAuth(["admin", "mudur"]);
+  applyRoleUI(profile);
+  bindLogoutButtons();
+
+  const form = document.getElementById("studentForm");
+  const saveBtn = document.getElementById("saveBtn");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const pageTitle = document.getElementById("pageTitle");
+  const crumb = document.getElementById("crumb");
+  const statusInfo = document.getElementById("statusInfo");
+
+  const studentId = qs("id");
+  const isEdit = !!studentId;
+
+  // ---- Sınıfları doldur ----
+  async function loadClasses() {
+    try {
+      const snap = await getDocs(collection(db, "classes"));
+      const select = form.elements["kursSinifId"];
+      snap.forEach(d => {
+        const c = d.data();
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = c.ad || "(isimsiz)";
+        select.appendChild(opt);
+      });
+    } catch (e) { console.warn(e); }
+  }
+
+  // ---- Veli tab geçişi ----
+  document.querySelectorAll(".veli-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".veli-tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".veli-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelector(`[data-panel="${btn.dataset.tab}"]`).classList.add("active");
+    });
+  });
+
+  // ---- TC validasyonu ----
+  function bindTcValidation(inputName) {
+    const input = form.elements[inputName];
+    if (!input) return;
+    const msg = form.querySelector(`.validation-msg[data-for="${inputName}"]`);
+    input.addEventListener("blur", () => {
+      const v = input.value.trim();
+      input.classList.remove("invalid");
+      if (msg) msg.textContent = "";
+      if (v && !tcKimlikValid(v)) {
+        input.classList.add("invalid");
+        if (msg) msg.textContent = "Geçersiz TC kimlik numarası";
+      }
+    });
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/\D/g, "").slice(0, 11);
+    });
+  }
+  bindTcValidation("tcNo");
+  bindTcValidation("anne.tcNo");
+  bindTcValidation("baba.tcNo");
+
+  // ---- Mevcut öğrenciyi yükle ----
+  async function loadStudent() {
+    if (!isEdit) {
+      // Yeni öğrenci - bugün tarihini varsayılan koy
+      const today = new Date().toISOString().split("T")[0];
+      form.elements["kayitTarihi"].value = today;
+      return;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, "students", studentId));
+      if (!snap.exists()) {
+        toast("Öğrenci bulunamadı", "error");
+        setTimeout(() => window.location.href = "ogrenciler.html", 1000);
+        return;
+      }
+      const s = snap.data();
+      pageTitle.textContent = s.adSoyad || "Öğrenci";
+      crumb.textContent = "Öğrenci Detayı";
+      deleteBtn.style.display = "inline-flex";
+      statusInfo.textContent = s.updatedAt ? `Son güncelleme: ${fmtDateTime(s.updatedAt)}` : "";
+
+      // Alanları doldur
+      setValue("adSoyad", s.adSoyad);
+      setValue("tcNo", s.tcNo);
+      setValue("telefon", s.telefon);
+      setValue("okul", s.okul);
+      setValue("sinif", s.sinif);
+      setValue("kursSinifId", s.kursSinifId);
+      setValue("dogumYeri", s.dogumYeri);
+      setValue("adres", s.adres);
+      setValue("notlar", s.notlar);
+      setDate("dogumTarihi", s.dogumTarihi);
+      setDate("kayitTarihi", s.kayitTarihi);
+
+      // Aktif
+      const aktifVal = s.aktif === false ? "false" : "true";
+      form.querySelector(`input[name="aktif"][value="${aktifVal}"]`).checked = true;
+
+      // Senet sorumlusu
+      const sorumlu = s.senetSorumlusu || "baba";
+      form.querySelector(`input[name="senetSorumlusu"][value="${sorumlu}"]`).checked = true;
+
+      // Veli bilgileri
+      if (s.anne) {
+        setValue("anne.adSoyad", s.anne.adSoyad);
+        setValue("anne.tcNo", s.anne.tcNo);
+        setValue("anne.telefon", s.anne.telefon);
+        setValue("anne.email", s.anne.email);
+        setValue("anne.meslek", s.anne.meslek);
+        setValue("anne.isyeri", s.anne.isyeri);
+      }
+      if (s.baba) {
+        setValue("baba.adSoyad", s.baba.adSoyad);
+        setValue("baba.tcNo", s.baba.tcNo);
+        setValue("baba.telefon", s.baba.telefon);
+        setValue("baba.email", s.baba.email);
+        setValue("baba.meslek", s.baba.meslek);
+        setValue("baba.isyeri", s.baba.isyeri);
+      }
+    } catch (e) {
+      console.error(e);
+      toast("Öğrenci yüklenemedi: " + e.message, "error");
+    }
+  }
+
+  function setValue(name, val) {
+    const el = form.elements[name];
+    if (el && val !== undefined && val !== null) el.value = val;
+  }
+  function setDate(name, ts) {
+    if (!ts) return;
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    form.elements[name].value = d.toISOString().split("T")[0];
+  }
+
+  // ---- Formu topla ----
+  function collectData() {
+    const fd = new FormData(form);
+    const getStr = (k) => (fd.get(k) || "").toString().trim();
+    const getDate = (k) => {
+      const v = getStr(k);
+      return v ? Timestamp.fromDate(new Date(v + "T00:00:00")) : null;
+    };
+
+    return {
+      adSoyad: getStr("adSoyad"),
+      tcNo: getStr("tcNo"),
+      telefon: getStr("telefon"),
+      okul: getStr("okul"),
+      sinif: getStr("sinif"),
+      kursSinifId: getStr("kursSinifId") || null,
+      dogumTarihi: getDate("dogumTarihi"),
+      dogumYeri: getStr("dogumYeri"),
+      adres: getStr("adres"),
+      kayitTarihi: getDate("kayitTarihi") || Timestamp.now(),
+      aktif: getStr("aktif") === "true",
+      senetSorumlusu: getStr("senetSorumlusu") || "baba",
+      anne: {
+        adSoyad: getStr("anne.adSoyad"),
+        tcNo: getStr("anne.tcNo"),
+        telefon: getStr("anne.telefon"),
+        email: getStr("anne.email"),
+        meslek: getStr("anne.meslek"),
+        isyeri: getStr("anne.isyeri"),
+      },
+      baba: {
+        adSoyad: getStr("baba.adSoyad"),
+        tcNo: getStr("baba.tcNo"),
+        telefon: getStr("baba.telefon"),
+        email: getStr("baba.email"),
+        meslek: getStr("baba.meslek"),
+        isyeri: getStr("baba.isyeri"),
+      },
+      notlar: getStr("notlar"),
+    };
+  }
+
+  // ---- Validasyon ----
+  function validate(data) {
+    const errors = [];
+    if (!data.adSoyad) errors.push("Ad Soyad zorunludur");
+    if (data.tcNo && !tcKimlikValid(data.tcNo)) errors.push("Öğrenci TC geçersiz");
+    if (data.anne.tcNo && !tcKimlikValid(data.anne.tcNo)) errors.push("Anne TC geçersiz");
+    if (data.baba.tcNo && !tcKimlikValid(data.baba.tcNo)) errors.push("Baba TC geçersiz");
+
+    // Senet sorumlusunun bilgileri dolu olmalı
+    const sorumlu = data[data.senetSorumlusu];
+    if (!sorumlu.adSoyad) errors.push(`Senet sorumlusunun adı girilmeli (${data.senetSorumlusu})`);
+    return errors;
+  }
+
+  // ---- Kaydet ----
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = collectData();
+    const errors = validate(data);
+    if (errors.length) {
+      toast(errors[0], "error");
+      return;
+    }
+
+    setLoading(saveBtn, true);
+
+    try {
+      if (isEdit) {
+        data.updatedAt = serverTimestamp();
+        await updateDoc(doc(db, "students", studentId), data);
+        toast("Öğrenci güncellendi ✓", "success");
+        statusInfo.textContent = `Az önce güncellendi`;
+      } else {
+        data.createdAt = serverTimestamp();
+        data.updatedAt = serverTimestamp();
+        data.createdBy = profile.uid;
+        const newDoc = await addDoc(collection(db, "students"), data);
+        toast("Öğrenci eklendi ✓", "success");
+        setTimeout(() => {
+          window.location.href = `ogrenci-detay.html?id=${newDoc.id}`;
+        }, 600);
+      }
+    } catch (err) {
+      console.error(err);
+      toast("Kaydedilemedi: " + err.message, "error");
+    } finally {
+      setLoading(saveBtn, false);
+      saveBtn.textContent = "Kaydet";
+    }
+  });
+
+  // ---- Sil ----
+  deleteBtn.addEventListener("click", async () => {
+    const ok = await confirmDialog(
+      "Öğrenciyi sil?",
+      "Bu işlem geri alınamaz. Öğrenciye ait tüm kayıtlar korunur ancak öğrenci listesinden kalkar.",
+      "Evet, sil",
+      "Vazgeç",
+      true
+    );
+    if (!ok) return;
+    try {
+      await deleteDoc(doc(db, "students", studentId));
+      toast("Öğrenci silindi", "success");
+      setTimeout(() => window.location.href = "ogrenciler.html", 600);
+    } catch (err) {
+      toast("Silinemedi: " + err.message, "error");
+    }
+  });
+
+  // ---- Başlat ----
+  await loadClasses();
+  await loadStudent();
+</script>
+
+</body>
+</html>
