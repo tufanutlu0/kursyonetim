@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş · Yıldız Kurs ERP</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0, 113, 227, 0.08), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 90%, rgba(255, 159, 10, 0.06), transparent 60%),
+      var(--bg);
+    padding: 24px;
+  }
+  .login-wrap {
+    width: 100%;
+    max-width: 420px;
+  }
+  .brand-mark {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .brand-logo {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0071e3 0%, #0055a5 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 26px;
+    font-weight: 700;
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.2);
+    margin-bottom: 16px;
+  }
+  .brand-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-1);
+    margin: 0 0 6px;
+  }
+  .brand-sub { font-size: 14px; color: var(--ink-3); margin: 0; }
+
+  .login-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .error-box {
+    padding: 10px 14px;
+    background: var(--danger-tint);
+    color: #c22a20;
+    border-radius: var(--r-md);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .error-box.show { display: block; animation: slideUp 0.2s var(--ease-out); }
+
+  .role-hint {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: var(--bg-subtle);
+    border-radius: var(--r-md);
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  .role-hint strong { color: var(--ink-1); font-weight: 600; }
+  .role-hint-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 10px;
+    margin-top: 6px;
+  }
+  .role-hint-grid .k { font-weight: 500; color: var(--ink-1); }
+
+  .footer-note {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--ink-4);
+  }
+</style>
+</head>
+<body>
+
+<div class="login-wrap animate-in">
+  <div class="brand-mark">
+    <div class="brand-logo">Y</div>
+    <h1 class="brand-title">Yıldız Kurs</h1>
+    <p class="brand-sub">Yönetim Sistemi</p>
+  </div>
+
+  <div class="login-card">
+    <div class="error-box" id="errorBox"></div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="field" style="margin-bottom:14px">
+        <label class="field-label" for="email">E-posta</label>
+        <input type="email" id="email" class="input" required autocomplete="username" placeholder="ornek@yildizkurs.com">
+      </div>
+
+      <div class="field" style="margin-bottom:20px">
+        <label class="field-label" for="password">Şifre</label>
+        <input type="password" id="password" class="input" required autocomplete="current-password" placeholder="••••••••" minlength="6">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="submitBtn">
+        Giriş Yap
+      </button>
+    </form>
+
+    <div class="role-hint">
+      <strong>4 rol destekleniyor</strong>
+      <div class="role-hint-grid">
+        <span class="k">Yönetici:</span><span>Tam yetki</span>
+        <span class="k">Müdür:</span><span>Muhasebe hariç her şey</span>
+        <span class="k">Öğretmen:</span><span>Sadece sınıf bilgileri</span>
+        <span class="k">Veli:</span><span>Öğrenci hesap ekstresi</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">© 2026 Yıldız Kurs · Yenimahalle, Ankara</p>
+</div>
+
+<script type="module">
+  import { auth } from "../js/firebase-config.js";
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { requireAuth } from "../js/auth-guard.js";
+  import { setLoading } from "../js/utils.js";
+
+  // Zaten giriş yapmışsa yönlendir
+  requireAuth();
+
+  const form = document.getElementById("loginForm");
+  const errorBox = document.getElementById("errorBox");
+  const submitBtn = document.getElementById("submitBtn");
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.add("show");
+  }
+
+  const errorMap = {
+    "auth/invalid-credential": "E-posta veya şifre hatalı.",
+    "auth/user-not-found":     "Kullanıcı bulunamadı.",
+    "auth/wrong-password":     "Şifre hatalı.",
+    "auth/invalid-email":      "Geçersiz e-posta adresi.",
+    "auth/too-many-requests":  "Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.",
+    "auth/user-disabled":      "Bu hesap devre dışı bırakılmış.",
+    "auth/network-request-failed": "Ağ hatası. İnternet bağlantınızı kontrol edin."
+  };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorBox.classList.remove("show");
+    setLoading(submitBtn, true);
+
+    try {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      await signInWithEmailAndPassword(auth, email, password);
+      // requireAuth() otomatik yönlendirecek
+    } catch (err) {
+      console.error(err);
+      setLoading(submitBtn, false);
+      showError(errorMap[err.code] || "Giriş başarısız: " + err.message);
+    }
+  });
+</script>
+
+</body>
+</html>
