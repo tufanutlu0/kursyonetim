@@ -1,0 +1,127 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================
+    // HELPER FUNCTIONS
+    // ========================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userRole() {
+      return userDoc().role;
+    }
+
+    function isActive() {
+      return userDoc().active == true;
+    }
+
+    function isAdmin() { return isSignedIn() && isActive() && userRole() == 'admin'; }
+    function isMudur() { return isSignedIn() && isActive() && userRole() == 'mudur'; }
+    function isOgretmen() { return isSignedIn() && isActive() && userRole() == 'ogretmen'; }
+    function isVeli() { return isSignedIn() && isActive() && userRole() == 'veli'; }
+
+    function isAdminOrMudur() { return isAdmin() || isMudur(); }
+
+    function linkedId() { return userDoc().linkedId; }
+
+    // ========================================================
+    // USERS
+    // ========================================================
+    match /users/{uid} {
+      // Kullanıcı kendi profilini okuyabilir, admin herkesi okur
+      allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      // Sadece admin kullanıcı oluşturabilir/silebilir
+      allow create, delete: if isAdmin();
+      // Kullanıcı kendi displayName/phone'u güncelleyebilir, rol değişikliği sadece admin
+      allow update: if isAdmin() || (
+        request.auth.uid == uid &&
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.active == resource.data.active &&
+        request.resource.data.linkedId == resource.data.linkedId
+      );
+    }
+
+    // ========================================================
+    // STUDENTS
+    // ========================================================
+    match /students/{sid} {
+      allow read: if isAdminOrMudur() ||
+                     (isOgretmen() && resource.data.kursSinifId != null) ||
+                     (isVeli() && linkedId() == sid);
+      allow create, update, delete: if isAdminOrMudur();
+    }
+
+    // ========================================================
+    // TEACHERS
+    // ========================================================
+    match /teachers/{tid} {
+      allow read: if isAdminOrMudur() || (isOgretmen() && linkedId() == tid);
+      allow create, update, delete: if isAdmin(); // müdür öğretmen değişikliği yapamaz
+
+      // Maaş ödemeleri SADECE admin
+      match /salaryPayments/{pid} {
+        allow read: if isAdmin() || (isOgretmen() && linkedId() == tid);
+        allow write: if isAdmin();
+      }
+    }
+
+    // ========================================================
+    // CLASSES
+    // ========================================================
+    match /classes/{cid} {
+      allow read: if isAdminOrMudur() ||
+                     (isOgretmen() && resource.data.ogretmenId == linkedId());
+      allow create, update, delete: if isAdminOrMudur();
+
+      // Yoklama
+      match /attendance/{aid} {
+        allow read: if isAdminOrMudur() ||
+                       (isOgretmen() && get(/databases/$(database)/documents/classes/$(cid)).data.ogretmenId == linkedId());
+        allow create, update, delete: if isAdminOrMudur() ||
+          (isOgretmen() && get(/databases/$(database)/documents/classes/$(cid)).data.ogretmenId == linkedId());
+      }
+    }
+
+    // ========================================================
+    // PROMISSORY NOTES (Senetler)
+    // ========================================================
+    match /promissoryNotes/{pid} {
+      allow read: if isAdminOrMudur() ||
+                     (isVeli() && resource.data.studentId == linkedId());
+      allow create, update, delete: if isAdminOrMudur();
+    }
+
+    // ========================================================
+    // CASH FLOW (Kasa) — SADECE ADMIN
+    // ========================================================
+    match /cashFlow/{fid} {
+      allow read, write: if isAdmin();
+    }
+
+    // ========================================================
+    // CONTRACTS
+    // ========================================================
+    match /contracts/{cid} {
+      allow read: if isAdminOrMudur() ||
+                     (isOgretmen() && resource.data.tip == 'ogretmen' && resource.data.hedefId == linkedId()) ||
+                     (isVeli() && resource.data.tip == 'ogrenci' && resource.data.hedefId == linkedId());
+      allow create, update, delete: if isAdminOrMudur();
+    }
+
+    // ========================================================
+    // SETTINGS
+    // ========================================================
+    match /settings/{key} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
